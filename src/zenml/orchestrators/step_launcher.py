@@ -584,7 +584,7 @@ class StepLauncher:
         Args:
             step_run_info: Additional information needed to run the step.
         """
-        self._wait_until_resource_request_approved(resource_request)
+        self._wait_until_resource_request_approved(step_run_info)
 
         # If we don't pass the run ID here, does it reuse the existing token?
         environment, secrets = orchestrator_utils.get_config_environment_vars(
@@ -668,7 +668,7 @@ class StepLauncher:
                     resource_request.id, hydrate=False
                 )
 
-                if resource_request.status == ResourceRequestStatus.APPROVED:
+                if resource_request.status == ResourceRequestStatus.ACQUIRED:
                     logger.info(
                         "Resource request `%s` for step `%s` was approved.",
                         resource_request.id,
@@ -680,9 +680,11 @@ class StepLauncher:
                     )
                     return
                 elif resource_request.status == ResourceRequestStatus.REJECTED:
+                    reason = resource_request.status_reason or "Unknown reason"
                     raise RuntimeError(
                         f"Resource request `{resource_request.id}` for step "
-                        f"`{step_run_info.pipeline_step_name}` was rejected."
+                        f"`{step_run_info.pipeline_step_name}` was rejected: "
+                        f"{reason}"
                     )
                 elif (
                     resource_request.status == ResourceRequestStatus.CANCELLED
